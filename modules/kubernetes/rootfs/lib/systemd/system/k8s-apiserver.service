@@ -1,0 +1,31 @@
+[Unit]
+Description=Kubernetes API Server
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+After=network.target etcd.service
+Requires=etcd.service
+
+[Service]
+EnvironmentFile=/etc/environment.tf
+EnvironmentFile=/etc/network-environment
+User=k8s
+ExecStart=/usr/bin/hyperkube apiserver \
+  --allow-privileged \
+  --bind-address=${DEFAULT_IPV4} \
+  --etcd-servers ${K8S_APISERVER_ETCD_SERVERS} \
+  --etcd-cafile /etc/ssl/ca.pem \
+  --etcd-certfile /etc/ssl/server.pem \
+  --etcd-keyfile /etc/ssl/server-key.pem \
+  --apiserver-count $SERVER_COUNT \
+  --client-ca-file /etc/ssl/ca.pem \
+  --tls-cert-file /etc/ssl/server.pem \
+  --tls-private-key-file /etc/ssl/server-key.pem \
+  --cert-dir /etc/kubernetes \
+  --service-cluster-ip-range 10.10.10.0/24 \
+  --service-account-key-file /etc/kubernetes/serviceaccount.key \
+  --admission-control NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota
+Restart=on-failure
+Type=notify
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

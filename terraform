@@ -1,0 +1,31 @@
+#!/bin/sh
+set -euo pipefail
+. config/env
+
+# Generate SSL
+CONFIG=config
+mkdir -p "$CONFIG/generated/ca"
+if [[ -e "$CONFIG/generated/ca/ca.pem" ]]; then
+	echo "$CONFIG/generated/ca/ca.pem already exists, skipping"
+else
+	cfssl gencert -initca $CONFIG/ca/ca-csr.json \
+    | cfssljson -bare $CONFIG/generated/ca -
+fi
+if [[ -e "$CONFIG/generated/serviceaccount.key" ]]; then
+	echo "$CONFIG/generated/serviceaccount.key already exists, skipping"
+else
+    openssl genrsa -out $CONFIG/generated/serviceaccount.key 2048
+fi
+
+# Run terraform
+export TF_VAR_domain=$DOMAIN
+export TF_VAR_flannel_mtu=$FLANNEL_MTU
+export TF_VAR_flannel_subnet=$FLANNEL_SUBNET
+export TF_VAR_node_name=$NODE_NAME
+export TF_VAR_organization=$SCALEWAY_ORGANIZATION
+export TF_VAR_region=$SCALEWAY_REGION
+export TF_VAR_server_count=$SERVER_COUNT
+export TF_VAR_server_type=$SERVER_TYPE
+export TF_VAR_token=$SCALEWAY_TOKEN
+terraform \
+  "$@"

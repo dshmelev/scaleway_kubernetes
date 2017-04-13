@@ -1,0 +1,4 @@
+terraform.tfvars
+config/generated
+.terraform
+terraform.tfstate*

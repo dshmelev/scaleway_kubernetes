@@ -1,0 +1,24 @@
+[Unit]
+Description=Docker Application Container Engine
+Documentation=https://docs.docker.com
+After=network.target docker.socket flanneld.service
+Requires=docker.socket flanneld.service
+
+[Service]
+EnvironmentFile=/run/flannel/subnet.env
+Type=notify
+ExecStart=/usr/bin/docker daemon -H fd:// \
+  --storage-driver=overlay \
+  --iptables=false \
+  --ip-masq=false \
+  --bip=${FLANNEL_SUBNET} --mtu=${FLANNEL_MTU}
+MountFlags=slave
+LimitNOFILE=1048576
+LimitNPROC=1048576
+LimitCORE=infinity
+TimeoutStartSec=0
+# set delegate yes so that systemd does not reset the cgroups of docker containers
+Delegate=yes
+
+[Install]
+WantedBy=multi-user.target

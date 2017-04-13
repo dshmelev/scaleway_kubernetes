@@ -1,0 +1,16 @@
+[Unit]
+Description=Kubernetes proxy
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+After=k8s-apiserver.service
+Requires=k8s-apiserver.service
+
+[Service]
+EnvironmentFile=/etc/network-environment
+EnvironmentFile=/etc/environment.tf
+ExecStart=/usr/bin/hyperkube proxy --bind-address=${DEFAULT_IPV4} --master=http://localhost:8080
+Restart=on-failure
+# Type=notify # hyperkube seems not to signal
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

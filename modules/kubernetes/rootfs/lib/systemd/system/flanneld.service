@@ -1,0 +1,29 @@
+[Unit]
+Description=Flanneld overlay address etcd agent
+After=network.target network-online.target etcd.service
+Wants=network-online.target
+Requires=etcd.service
+
+[Service]
+Type=notify
+EnvironmentFile=/etc/environment.tf
+EnvironmentFile=/etc/network-environment
+ExecStartPre=/usr/bin/etcdctl \
+  --endpoints ${FLANNEL_ETCD_ENDPOINTS} \
+  --ca-file /etc/ssl/ca.pem \
+  --cert-file /etc/ssl/server.pem \
+  --key-file /etc/ssl/server-key.pem \
+  set /kubernetes-cluster/network/config '{"Network":"${FLANNEL_SUBNET}","SubnetLen":24,"Backend":{"Type":"vxlan","VNI":1}}'
+ExecStart=/usr/bin/flanneld \
+  -etcd-endpoints=https://${FLANNEL_ETCD_ENDPOINTS}:2379 \
+  -etcd-cafile=/etc/ssl/ca.pem \
+  -etcd-certfile=/etc/ssl/server.pem \
+  -etcd-keyfile=/etc/ssl/server-key.pem \
+  -etcd-prefix=/kubernetes-cluster/network \
+  -ip-masq \
+  -iface=${DEFAULT_IPV4}
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+RequiredBy=docker.service

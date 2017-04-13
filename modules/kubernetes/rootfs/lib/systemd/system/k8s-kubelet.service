@@ -1,0 +1,23 @@
+[Unit]
+Description=Kubernetes kubelet
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+After=k8s-apiserver.service docker.service
+Requires=k8s-apiserver.service docker.service
+
+[Service]
+EnvironmentFile=/etc/environment.tf
+EnvironmentFile=/etc/network-environment
+ExecStart=/usr/bin/hyperkube kubelet \
+  --allow-privileged \
+  --address ${DEFAULT_IPV4} \
+  --api-servers http://localhost:8080 \
+  --tls-cert-file /etc/ssl/server.pem \
+  --tls-private-key-file /etc/ssl/server-key.pem \
+  --cadvisor-port 0 \
+  --cluster-dns 10.10.10.10 \
+  --cluster-domain ${DOMAIN}
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
